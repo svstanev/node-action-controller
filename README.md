@@ -9,7 +9,7 @@ Conventions over configuration
     App/
         controllers/
             api/
-                accountController.js    --> /api/account
+                accountsController.js    --> /api/accounts
 
 ## Controllers
 
@@ -19,24 +19,48 @@ Conventions over configuration
 
 ### Examples
 
-    var mvc = require('mvc');
+    var mvc = require('node-action-controller');
 
-    function AccountController() {
+    function AccountsController() {
     }
 
-    AccountController.prototype.get = function() {
+    // GET /api/accounts
+    AccountsController.prototype.list = function() {
     };
 
-    AccountController.prototype.create = function() {
+    // GET /api/accounts/:id
+    AccountsController.prototype.get = function(id) {
     };
 
-    AccountController.prototype.update = function() {
+    // alias for AccountsController.get
+    AccountsController.prototype.index = function(id) {
     };
 
-    AccountController.prototype.delete = function() {
+    // POST /api/accounts data
+    AccountsController.prototype.post = function(data) {
     };
 
-    module.exports = AccountController;
+    // alias for AccountsController.post
+    AccountsController.prototype.create = function(data) {
+    };
+
+    // PUT /api/accounts/:id data
+    AccountsController.prototype.put = function(id, data) {
+    };
+
+    // alias for AccountsController.put
+    AccountsController.prototype.update = function(id, data) {
+    };
+
+    // DELETE /api/accounts/:id
+    AccountsController.prototype.delete = function(id) {
+    };
+
+    // alias for AccountsController.delete
+    AccountsController.prototype.destroy = function(id) {
+    };
+
+    module.exports = AccountsController;
 
 ## API
 
@@ -92,7 +116,7 @@ The controller constructor function *fn*
 #### Remarks
 
 #### Example
-    var mvc = require('mvc');
+    var mvc = require('node-action-controller');
 
     app.use(mvc.express({
         controllerDir: path.join(__dirname, 'controllers'),
