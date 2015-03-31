@@ -19,7 +19,7 @@ function isObject(arg) {
 }
 
 function isPromise(o) {
-  return (o && isFunction(o.then) && isFunction(o.catch) && isFunction(o.finally));
+  return (!!o && isFunction(o.then) && isFunction(o.catch));
 }
 
 function isUndefined(arg) {
