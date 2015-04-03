@@ -107,20 +107,20 @@ ExpressActionBinding.prototype.logError = function (description, err) {
         .appendLine()
         .appendLine('{0}:', description)
         .appendLine(
-            '\tAction: {0} {1} - {2}',
-            this.action.route.verb.toUpperCase(),
-            this.getPath(),
-            this.action.route.name)
+        '\tAction: {0} {1} - {2}',
+        this.action.route.verb.toUpperCase(),
+        this.getPath(),
+        this.action.route.name)
         .appendLine('\tController: {0}', this.controller.route.src)
         .appendLine('\tError:')
         .append('\t\t{0}', err)
-        .toString(function(err, str) {
+        .toString(function (err, str) {
             debug(str);
         })
     ;
 };
 
-ExpressActionBinding.prototype.logBinding = function() {
+ExpressActionBinding.prototype.logBinding = function () {
     debug(
         utils.format(
             'MVC action: %s %s - %s',
@@ -129,7 +129,7 @@ ExpressActionBinding.prototype.logBinding = function() {
             this.action.route.name));
 };
 
-ExpressActionBinding.prototype.renderResult = function(result, res, next) {
+ExpressActionBinding.prototype.renderResult = function (result, res, next) {
     if (!result || !result.render) {
         result = Result.toResult(result);
     }
@@ -137,7 +137,7 @@ ExpressActionBinding.prototype.renderResult = function(result, res, next) {
     result.render(res, next);
 };
 
-ExpressActionBinding.prototype.handlePromise = function(promise, res, next) {
+ExpressActionBinding.prototype.handlePromise = function (promise, res, next) {
     var self = this;
     promise
         .catch(function (err) {

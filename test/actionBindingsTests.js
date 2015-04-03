@@ -1,5 +1,4 @@
-suite('action bindings tests', function() {
-
+suite('action bindings tests', function () {
 
 
 });

@@ -18,7 +18,7 @@ function withOverloads(overloads) {
 
         var argCount = argTypes.length, fn;
 
-        overloads.some(function(overload) {
+        overloads.some(function (overload) {
             if (overload.length === argCount + 1) {
                 var match = true;
                 for (var i = 0; match && i < argCount; i++) {
@@ -46,7 +46,7 @@ function split_arr(arr) {
     var fn = arr.slice(-1)[0];
 
     return {
-        options: { args: args },
+        options: {args: args},
         fn: fn
     };
 }
@@ -67,8 +67,12 @@ function split_arr(arr) {
  *
  */
 var Route = withOverloads([
-    ['string', 'function',           function(path, fn)    { return route_fn(path, null, fn);}],
-    ['object', 'function',           function(options, fn) { return route_fn(null, options, fn); }],
+    ['string', 'function', function (path, fn) {
+        return route_fn(path, null, fn);
+    }],
+    ['object', 'function', function (options, fn) {
+        return route_fn(null, options, fn);
+    }],
     ['string', 'object', 'function', route_fn],
 
     //['string',  'object', 'array', route_arr],
@@ -209,18 +213,34 @@ Route.httpDelete = function (path, options, fn) {
  * @return {*}
  */
 Route.http = withOverloads([
-    ['object', 'function', function(options, fn)  { return http_fn(null, null, options, fn); }],
-    ['string', 'function', function(verb, fn)     { return http_fn(verb, null, null, fn); }],
-    ['object', 'array',    function(options, arr) { return http_arr(null, null, options, arr); }],
-    ['string', 'array',    function(verb, arr)    { return http_arr(verb, null, null, arr); }],
+    ['object', 'function', function (options, fn) {
+        return http_fn(null, null, options, fn);
+    }],
+    ['string', 'function', function (verb, fn) {
+        return http_fn(verb, null, null, fn);
+    }],
+    ['object', 'array', function (options, arr) {
+        return http_arr(null, null, options, arr);
+    }],
+    ['string', 'array', function (verb, arr) {
+        return http_arr(verb, null, null, arr);
+    }],
 
-    ['string', 'string', 'function', function(verb, path, fn)     { return http_fn(verb, path, null, fn); }],
-    ['string', 'object', 'function', function(verb, options, fn)  { return http_fn(verb, null, options, fn); }],
-    ['string', 'string', 'array',    function(verb, path, arr)    { return http_arr(verb, path, null, arr); }],
-    ['string', 'object', 'array',    function(verb, options, arr) { return http_arr(verb, null, options, arr); }],
+    ['string', 'string', 'function', function (verb, path, fn) {
+        return http_fn(verb, path, null, fn);
+    }],
+    ['string', 'object', 'function', function (verb, options, fn) {
+        return http_fn(verb, null, options, fn);
+    }],
+    ['string', 'string', 'array', function (verb, path, arr) {
+        return http_arr(verb, path, null, arr);
+    }],
+    ['string', 'object', 'array', function (verb, options, arr) {
+        return http_arr(verb, null, options, arr);
+    }],
 
     ['string', 'string', 'object', 'function', http_fn],
-    ['string', 'string', 'object', 'array',    http_arr],
+    ['string', 'string', 'object', 'array', http_arr],
 ]);
 
 function http_fn(verb, path, options, fn) {

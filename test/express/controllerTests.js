@@ -94,7 +94,7 @@ suite('controller tests', function () {
         }
 
         UsersControllerX.prototype.list = function () {
-            throw { message: 'something went wrong here' };
+            throw {message: 'something went wrong here'};
         };
 
         var req = httpMocks.createRequest({
@@ -117,7 +117,7 @@ suite('controller tests', function () {
         }
 
         UsersControllerZ.prototype.index = function (id) {
-            return Result.View('views/index.html', { id: id });
+            return Result.View('views/index.html', {id: id});
         };
 
         var req = httpMocks.createRequest({

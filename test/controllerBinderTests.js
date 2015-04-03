@@ -5,102 +5,106 @@ var httpMocks = require('node-mocks-http');
 var ControllerBinder = require('../src/ControllerBinder').ControllerBinder;
 
 function getActionName(action) {
-  return action.route.name;
+    return action.route.name;
 }
 
 function getActionPath(action) {
-  return action.route.path;
+    return action.route.path;
 }
 
-suite('controller binder tests', function() {
+suite('controller binder tests', function () {
 
-  suite('controllerFactory', function() {
-    test('default controller factory if no provided', function () {
-      function MyController() {}
+    suite('controllerFactory', function () {
+        test('default controller factory if no provided', function () {
+            function MyController() {
+            }
 
-      var binder = new ControllerBinder(MyController);
+            var binder = new ControllerBinder(MyController);
 
-      assert.isFunction(binder.controllerFactory);
-      assert.instanceOf(binder.controllerFactory(), MyController);
+            assert.isFunction(binder.controllerFactory);
+            assert.instanceOf(binder.controllerFactory(), MyController);
+        });
+
+        test('external controller factory', function () {
+            var log = [];
+
+            function MyController() {
+            }
+
+            function myControllerFactory() {
+                log.push('myControllerFactory');
+                return new MyController();
+            }
+
+            var binder = new ControllerBinder(MyController, myControllerFactory);
+
+            assert.isFunction(binder.controllerFactory);
+
+            // NOTE: the custom controller factory may return whatever it finds appropriate
+            assert.instanceOf(binder.controllerFactory(), MyController);
+
+            assert.deepEqual(log, ['myControllerFactory']);
+        });
     });
 
-    test('external controller factory', function () {
-      var log = [];
+    suite('getActions', function () {
+        var actions;
 
-      function MyController() {}
+        setup(function () {
+            actions = new ControllerBinder(require('./controllers/api/usersController'))
+                .getActions();
+        });
 
-      function myControllerFactory() {
-        log.push('myControllerFactory');
-        return new MyController();
-      }
+        test('should return array of functions', function () {
+            assert.isArray(actions);
 
-      var binder = new ControllerBinder(MyController, myControllerFactory);
+            actions.forEach(function (action) {
+                assert.isFunction(action);
+            });
+        });
 
-      assert.isFunction(binder.controllerFactory);
+        test('all actions should have the route attribution', function () {
+            actions.forEach(function (action) {
+                assert.isObject(action.route, 'route');
+                assert.includeMembers(['get', 'put', 'post', 'delete'], [action.route.verb], 'verb');
+                assert.isString(action.route.path, 'path');
+                assert.isString(action.route.name, 'name');
+            });
+        });
 
-      // NOTE: the custom controller factory may return whatever it finds appropriate
-      assert.instanceOf(binder.controllerFactory(), MyController);
+        test('dispose is never mapped to a controller action', function () {
+            var actionNames = actions.map(getActionName);
 
-      assert.deepEqual(log, ['myControllerFactory']);
+            assert(actionNames.indexOf('dispose') < 0);
+        });
+
+        test('ignored methods (Route.httpIgnore) is never mapped to a controller action', function () {
+            var actionNames = actions.map(getActionName);
+
+            assert(actionNames.indexOf('notAnAction') < 0);
+        });
+
+        test('methods with names starting with _ are not mapped to a controller actions', function () {
+            var actionNames = actions.map(getActionName);
+
+            assert(actionNames.indexOf('_notAnAction') < 0);
+            assert(actionNames.indexOf('__notAnAction') < 0);
+        });
+
+        test('test', function () {
+            var actionProperties = actions.map(function (a) {
+                return [a.route.name, a.route.path];
+            });
+
+            assert.deepEqual(
+                actionProperties,
+                [
+                    ['list', ''],
+                    ['get', '/:id']
+                ]);
+        });
+
     });
-  });
-
-  suite('getActions', function() {
-    var actions;
-
-    setup(function() {
-      actions = new ControllerBinder(require('./controllers/api/usersController'))
-        .getActions();
-    });
-
-    test('should return array of functions', function() {
-      assert.isArray(actions);
-
-      actions.forEach(function(action) {
-        assert.isFunction(action);
-      });
-    });
-
-    test('all actions should have the route attribution', function() {
-      actions.forEach(function(action) {
-        assert.isObject(action.route, 'route');
-        assert.includeMembers(['get', 'put', 'post', 'delete'], [ action.route.verb ], 'verb');
-        assert.isString(action.route.path, 'path');
-        assert.isString(action.route.name, 'name');
-      });
-    });
-
-    test('dispose is never mapped to a controller action', function() {
-      var actionNames = actions.map(getActionName);
-
-      assert(actionNames.indexOf('dispose') < 0);
-    });
-
-    test('ignored methods (Route.httpIgnore) is never mapped to a controller action', function() {
-      var actionNames = actions.map(getActionName);
-
-      assert(actionNames.indexOf('notAnAction') < 0);
-    });
-
-    test('methods with names starting with _ are not mapped to a controller actions', function() {
-      var actionNames = actions.map(getActionName);
-
-      assert(actionNames.indexOf('_notAnAction') < 0);
-      assert(actionNames.indexOf('__notAnAction') < 0);
-    });
-
-    test('test', function() {
-      var actionProperties = actions.map(function(a) { return [a.route.name, a.route.path]; });
-
-      assert.deepEqual(
-          actionProperties,
-          [
-            ['list', ''],
-            ['get', '/:id']
-        ]);
-    });
-
-  });
 
 
 });

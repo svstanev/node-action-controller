@@ -5,45 +5,46 @@ var httpMocks = require('node-mocks-http');
 var Route = require('../../src/route').Route;
 var expressMvc = require('../../src/express/index');
 
-suite('express/routeTests', function(){
+suite('express/routeTests', function () {
 
-    var next = function() { };
+    var next = function () {
+    };
 
-    test('controller1', function() {
+    test('controller1', function () {
         var output = [];
         var disposeCount = 0;
 
-        var UsersController = Route('/api/users', function() {
+        var UsersController = Route('/api/users', function () {
 
         });
 
-        UsersController.prototype.dispose = function() {
+        UsersController.prototype.dispose = function () {
             output.push(['dispose', ++disposeCount]);
         };
 
-        UsersController.prototype.list = function() {
+        UsersController.prototype.list = function () {
             output.push(['list']);
             return 'abc';
         };
 
-        UsersController.prototype.get = function(id) {
+        UsersController.prototype.get = function (id) {
             output.push(['get', id]);
             return 'abc';
         };
 
-        UsersController.prototype.create = function(userData) {
+        UsersController.prototype.create = function (userData) {
             output.push(['post', userData]);
         };
 
-        UsersController.prototype.update = function(id, userData) {
+        UsersController.prototype.update = function (id, userData) {
             output.push(['put', id, userData]);
         };
 
-        UsersController.prototype.delete = function(id) {
+        UsersController.prototype.delete = function (id) {
             output.push(['delete', id]);
         };
 
-      var router = expressMvc.routerFromController(UsersController);
+        var router = expressMvc.routerFromController(UsersController);
 
         var req = httpMocks.createRequest({
             method: 'get',
@@ -74,7 +75,7 @@ suite('express/routeTests', function(){
             ]);
     });
 
-    test('controller -- usage', function() {
+    test('controller -- usage', function () {
         // api/users
         var UserController = Route('/api/users', function (userManager) {
             this.users = {};
@@ -89,9 +90,9 @@ suite('express/routeTests', function(){
         //  UserController.prototype.index = function() {  }; <-- should return View?
 
         Route.httpGet('',
-        UserController.prototype.getUsers = function() {
+            UserController.prototype.getUsers = function () {
 
-        });
+            });
 
 
         // GET api/users/:id
@@ -101,9 +102,9 @@ suite('express/routeTests', function(){
         //  UserController.prototype.index = function(id) {  }; <-- should return View?
 
         Route.httpGet('/:id',
-        UserController.prototype.getUser = function(id) {
-            return this.users[id];
-        });
+            UserController.prototype.getUser = function (id) {
+                return this.users[id];
+            });
 
         // POST api/users
         //
@@ -112,8 +113,10 @@ suite('express/routeTests', function(){
         //  UserController.prototype.create = function(userData) { };
 
         Route.httpPost('/', [
-                function userData(req) { return req.body; },
-            UserController.prototype.createUser = function(userData) {
+            function userData(req) {
+                return req.body;
+            },
+            UserController.prototype.createUser = function (userData) {
 
             }]);
 
@@ -124,11 +127,15 @@ suite('express/routeTests', function(){
         //  UserController.prototype.update = function(id, userData) { };
 
         Route.httpPut('/:id', [
-            function id(req) { return req.params.id; },
-            function userData(req) { return req.body; },
-            UserController.prototype.updateUser = function(id, userData) {
+            function id(req) {
+                return req.params.id;
+            },
+            function userData(req) {
+                return req.body;
+            },
+            UserController.prototype.updateUser = function (id, userData) {
 
-        }]);
+            }]);
 
         // DELETE api/users/:id
         // PUT api/users/:id
@@ -137,32 +144,32 @@ suite('express/routeTests', function(){
         //  UserController.prototype.delete = function(id) { };
 
         Route.httpDelete('/:id',
-        UserController.prototype.deleteUser = function(id) {
+            UserController.prototype.deleteUser = function (id) {
 
-        });
+            });
 
         /*
 
-        Alternatives:
+         Alternatives:
 
-        function UserController(){
-            ...
-        }
+         function UserController(){
+         ...
+         }
 
-        UserController.route = { path: '/users' };
+         UserController.route = { path: '/users' };
 
-        UserController.prototype.deleteUser = function(id) {
-            ...
-        }
+         UserController.prototype.deleteUser = function(id) {
+         ...
+         }
 
-        UserController.prototype.deleteUser.route = {
-            verb: 'delete',
-            path: '/:id',
-            args: [
-                function(req){ return req.params.id; }
-            ]
-        };
+         UserController.prototype.deleteUser.route = {
+         verb: 'delete',
+         path: '/:id',
+         args: [
+         function(req){ return req.params.id; }
+         ]
+         };
 
-        */
+         */
     });
 });

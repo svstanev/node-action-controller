@@ -12,8 +12,8 @@ module.exports.getArgNames = function getArgNames(fn) {
     var fnText = fn.toString().replace(STRIP_COMMENTS, '');
     var argDecl = fnText.match(FN_ARGS);
     var args = [];
-    argDecl[1].split(FN_ARG_SPLIT).forEach(function(arg) {
-        arg.replace(FN_ARG, function(all, underscore, name) {
+    argDecl[1].split(FN_ARG_SPLIT).forEach(function (arg) {
+        arg.replace(FN_ARG, function (all, underscore, name) {
             args.push(name);
         });
     });

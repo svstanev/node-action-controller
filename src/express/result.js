@@ -17,26 +17,26 @@ function Result(code, data) {
     this.code = code;
 
     switch (typeof data) {
-      case 'function':
-        assert(false, 'Unsupported result body type: Function');
-        break;
+        case 'function':
+            assert(false, 'Unsupported result body type: Function');
+            break;
 
-      case 'number':
-        // express' response.send always treats numbers as statusCode so we have to encode 'em as strings
-        data = '' + data;
-        break;
+        case 'number':
+            // express' response.send always treats numbers as statusCode so we have to encode 'em as strings
+            data = '' + data;
+            break;
     }
 
     this.data = data;
 }
 
-Result.prototype.render = function(res) {
+Result.prototype.render = function (res) {
     if (this.noCache) {
         var setHeader = res.header || res.setHeader;
 
         setHeader.call(res, "Cache-Control", "no-cache, no-store, must-revalidate");
         setHeader.call(res, "Pragma", "no-cache");
-        setHeader.call(res, "Expires",0);
+        setHeader.call(res, "Expires", 0);
     }
 
     if (this.code) {
@@ -48,12 +48,12 @@ Result.prototype.render = function(res) {
     }
 };
 
-Result.prototype.renderOverride = function(res) {
-  res.send(this.code, this.data);
+Result.prototype.renderOverride = function (res) {
+    res.send(this.code, this.data);
 };
 
 function isUndefined(o) {
-  return typeof o === 'undefined';
+    return typeof o === 'undefined';
 }
 
 /**
@@ -73,7 +73,7 @@ function ErrorResult(code, error) {
 
 utils.inherits(ErrorResult, Result);
 
-ErrorResult.prototype.renderOverride = function(res) {
+ErrorResult.prototype.renderOverride = function (res) {
     // do not call res.end() as the res.send() will call it anyways
     res.send(this.error);
 };
@@ -94,7 +94,6 @@ function InternalErrorResult(error) {
 utils.inherits(InternalErrorResult, ErrorResult);
 
 
-
 /**
  * ViewResult
  * @param view
@@ -112,7 +111,7 @@ function ViewResult(view, model) {
 }
 utils.inherits(ViewResult, Result);
 
-ViewResult.prototype.renderOverride = function(res) {
+ViewResult.prototype.renderOverride = function (res) {
 
     // mockResponse render requires 3 arguments to catch the data correctly (2nd arg); passing null makes it work OK while
     // NOTE: res.render() calls res.end();
@@ -120,12 +119,11 @@ ViewResult.prototype.renderOverride = function(res) {
 };
 
 
-
 /**
  * JsonResult
  * @constructor
  */
-function JsonResult(data){
+function JsonResult(data) {
     if (!(this instanceof JsonResult)) {
         return new JsonResult(data);
     }
@@ -135,11 +133,10 @@ function JsonResult(data){
 }
 utils.inherits(JsonResult, Result);
 
-JsonResult.prototype.renderOverride = function(res) {
+JsonResult.prototype.renderOverride = function (res) {
     res.json(this.data);
     res.end();
 };
-
 
 
 /**
@@ -159,10 +156,9 @@ function RedirectResult(code, url) {
 
 utils.inherits(RedirectResult, Result);
 
-RedirectResult.prototype.render = function(res) {
+RedirectResult.prototype.render = function (res) {
     res.redirect(this.code, this.url);
 };
-
 
 
 /**
@@ -171,20 +167,20 @@ RedirectResult.prototype.render = function(res) {
  * @constructor
  */
 function ContinueResult(err) {
-  if (!(this instanceof ContinueResult)) {
-    return new ContinueResult(err);
-  }
+    if (!(this instanceof ContinueResult)) {
+        return new ContinueResult(err);
+    }
 
-  this.err = err;
+    this.err = err;
 }
 
-ContinueResult.prototype.render = function(res, next) {
-  var args = [];
-  if (this.err) {
-    args.push(this.err);
-  }
+ContinueResult.prototype.render = function (res, next) {
+    var args = [];
+    if (this.err) {
+        args.push(this.err);
+    }
 
-  next.apply(null, args);
+    next.apply(null, args);
 };
 
 /**
@@ -192,12 +188,13 @@ ContinueResult.prototype.render = function(res, next) {
  * @constructor
  */
 function VoidResult() {
-  if (!(this instanceof VoidResult)) {
-    return new VoidResult();
-  }
+    if (!(this instanceof VoidResult)) {
+        return new VoidResult();
+    }
 }
 
-VoidResult.prototype.render = function() { };
+VoidResult.prototype.render = function () {
+};
 
 
 Result.Error = ErrorResult;
@@ -221,19 +218,19 @@ Result.NotFound = new ErrorResult(404);
 Result.InternalServerError = new ErrorResult(500);
 
 Result.toResult = function (o) {
-  if (utils.isUndefined(o)) {
-    return new VoidResult();
-  }
+    if (utils.isUndefined(o)) {
+        return new VoidResult();
+    }
 
-  if (o === null) {
-    return new ErrorResult(404);
-  }
+    if (o === null) {
+        return new ErrorResult(404);
+    }
 
-  if (utils.isNumber(o)) {
-    return new Result(o);
-  }
+    if (utils.isNumber(o)) {
+        return new Result(o);
+    }
 
-  return new Result(200, o);
+    return new Result(200, o);
 };
 
 module.exports = Result;
