@@ -116,9 +116,9 @@ The controller constructor function *fn*
 #### Remarks
 
 #### Example
-    var mvc = require('node-action-controller');
+    var action_controller = require('node-action-controller');
 
-    app.use(mvc.express({
+    app.use('/api/v1/', action_controller.express({
         controllerDir: path.join(__dirname, 'controllers'),
         factory: function (controller, context) {
 
