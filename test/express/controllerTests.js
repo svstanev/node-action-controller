@@ -9,6 +9,7 @@ var Result = expressMvc.Result;
 suite('controller tests', function () {
     var next = function () {
     };
+
     test('instantiate/dispose controller for each action', function () {
         var log = [];
 
@@ -211,7 +212,7 @@ suite('controller tests', function () {
             log.push(['ctor']);
         }
 
-        UsersController.prototype.index = Route.httpPut('/api/users/:id', function (id, data) {
+        UsersController.prototype.index = Route.httpPut('/api/users/:id')(function (id, data) {
             log.push(['index', id]);
             return 'index @' + id;
         });
@@ -274,11 +275,9 @@ suite('controller tests', function () {
             next();
         }
 
-        var UsersController = Route('/api/users',
-            {before: controllerBefore, after: controllerAfter},
-            function () {
-                log.push('--- ctor ---');
-            });
+        var UsersController = Route('/api/users', {before: controllerBefore, after: controllerAfter})(function () {
+            log.push('--- ctor ---');
+        });
 
         UsersController.prototype.dispose = function () {
             log.push('--- dispose ---');
@@ -287,28 +286,28 @@ suite('controller tests', function () {
         UsersController.prototype.get = Route.httpGet('/:id', {
             before: actionBefore,
             after: actionAfter
-        }, function (id) {
+        })(function (id) {
             log.push(['get', id]);
 
             // continue to the after filters
             return Result.Continue();
         });
 
-        UsersController.prototype.xxx = Route.httpGet('/:id/xxx', {before: actionBefore}, function (id) {
+        UsersController.prototype.xxx = Route.httpGet('/:id/xxx', {before: actionBefore})(function (id) {
             log.push(['get', 'xxx', id]);
 
             // continue to the after filters
             return Result.Continue();
         });
 
-        UsersController.prototype.yyy = Route.httpGet('/:id/yyy', {after: actionAfter}, function (id) {
+        UsersController.prototype.yyy = Route.httpGet('/:id/yyy', {after: actionAfter})(function (id) {
             log.push(['get', 'yyy', id]);
 
             // continue to the after filters
             return Result.Continue();
         });
 
-        UsersController.prototype.zzz = Route.httpGet('/:id/zzz', function (id) {
+        UsersController.prototype.zzz = Route.httpGet('/:id/zzz')(function (id) {
             log.push(['get', 'zzz', id]);
 
             // continue to the after filters
@@ -383,7 +382,7 @@ suite('controller tests', function () {
         function UsersController() {
         }
 
-        UsersController.prototype.myResources = Route.http({}, function () {
+        UsersController.prototype.myResources = Route.http({})(function () {
             log.push('myResources');
         });
 

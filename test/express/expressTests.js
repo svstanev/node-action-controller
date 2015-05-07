@@ -12,7 +12,6 @@ var Result = expressMvc.Result;
 var next = function () {
 };
 
-
 suite('express tests', function () {
 
     function initUsers(users) {
@@ -52,10 +51,10 @@ suite('express tests', function () {
         return Result.OK;
     }
 
-    function updateUser(id, userInfo) {
+    function updateUser(id, data) {
         throwIfInvalidUserId(id);
 
-        this.users[id] = _.extend(this.users[id], userInfo);
+        this.users[id] = _.extend(this.users[id], data);
 
         return Result.Success;
     }
@@ -84,7 +83,7 @@ suite('express tests', function () {
          * @class UsersController
          * @constructor
          */
-        UsersController = Route('/api/users', function () {
+        UsersController = Route('/api/users')(function () {
             this.users = initUsers([]);
         });
     });

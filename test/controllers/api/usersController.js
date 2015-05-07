@@ -13,7 +13,7 @@ UsersController.prototype.someAction = function () {
 
 };
 
-UsersController.prototype.notAnAction = Route.httpIgnore(function () {
+UsersController.prototype.notAnAction = Route.httpIgnore()(function () {
 
 });
 

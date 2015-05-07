@@ -12,16 +12,17 @@ var DirectoryWalker = require('./directoryWalker');
 function ControllerLoader(options) {
     EventEmitter.call(this);
 
-    var defaultOptions = ControllerLoader.defaultOptions;
-    var controllerDir = (options.controllerDir || defaultOptions.controllerDir);
+    options = utils.extend({}, ControllerLoader.defaultOptions, options);
 
-    this.controllerDir = path.resolve(process.cwd(), controllerDir);
+    this.controllerDir = path.resolve(process.cwd(), options.controllerDir);
+    this.controllerSuffix = options.controllerSuffix.replace(/.*?\.js$/, '');
 }
 
 utils.inherits(ControllerLoader, EventEmitter);
 
 ControllerLoader.defaultOptions = {
-    controllerDir: './controllers'
+    controllerDir: './controllers',
+    controllerSuffix: 'controller'
 };
 
 ControllerLoader.prototype.beginLoad = function () {
@@ -84,7 +85,9 @@ ControllerLoader.prototype.onError = function (info) {
 
 ControllerLoader.prototype.getResourceNameForControllerModule = function (file) {
     file = file.toLowerCase();
-    var basename = path.basename(file, 'controller.js');
+
+    var basename = path.basename(file, this.controllerSuffix + '.js');
+
     return basename != file ? basename : null;
 };
 

@@ -16,6 +16,10 @@ function ExpressActionBinding(controller, action, controllerFactory) {
 
 utils.inherits(ExpressActionBinding, ActionBinding);
 
+ExpressActionBinding.prototype.resolveArguments = function (args) {
+    return args.map(resolveArgumentMapping);
+};
+
 ExpressActionBinding.prototype.resolveExpressAction = function (express) {
     var verb = (this.action.route.verb || 'get').toLowerCase();
 
@@ -205,3 +209,90 @@ module.exports.ExpressActionBinding = ExpressActionBinding;
  module.exports.ExpressRouterActionBinding = ExpressRouterActionBinding;
  */
 
+
+
+function getRequestParam(name) {
+    return function (req) {
+        return req.params[name];
+    };
+}
+
+function getRequestValue(name) {
+    return function (req) {
+        return req[name];
+    };
+}
+
+function getBodyValue(name) {
+    return function (req) {
+        return req.body[name];
+    };
+}
+
+function getQueryParam(name, req) {
+    return function (req) {
+        return req.query[name];
+    };
+}
+
+function getOther(name) {
+    return function(req) {
+        switch (name) {
+            case 'body':
+            case 'data':
+                return req.body;
+
+            default:
+                return null;
+        }
+    }
+}
+
+function getValue(name) {
+    var param = getRequestParam(name);
+    var body = getBodyValue(name);
+    var query = getQueryParam(name);
+    var other = getOther(name);
+
+    return function (req) {
+        return param(req) || query(req) || body(req) || other(req);
+    };
+}
+
+
+function getArgValueAccessor(src) {
+    switch (src) {
+        default:
+            //case 'params':
+            //case 'url':
+            return getRequestParam;
+
+        case 'body':
+            return getBodyValue;
+
+        case 'query':
+            return getQueryParam;
+
+        case 'request':
+            return getRequestValue;
+    }
+}
+
+function resolveArgumentMapping(mapping) {
+    if (utils.isFunction(mapping)) {
+        // Ex.: function (req) { return req.body.name; }
+        return mapping;
+    }
+
+    if (utils.isString(mapping)) {
+        // Ex.: 'name' -> (req.params.name || req.body.name || req.query.name)
+        return getValue(mapping);
+    }
+
+    if (utils.isObject(mapping)) {
+        // Ex.: { src: 'body', name: 'firstName' }
+        return getArgValueAccessor(mapping.src)(mapping.name);
+    }
+
+    throw new Error('Invalid argument mapping');
+}

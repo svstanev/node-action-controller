@@ -12,7 +12,7 @@ suite('async action tests', function () {
     test('resolved promise', function (done) {
         var output = [];
 
-        var UsersController = Route('/api/users', function () {
+        var UsersController = Route('/api/users')(function () {
 
         });
 
@@ -53,7 +53,7 @@ suite('async action tests', function () {
     test('rejected promise', function (done) {
         var output = [];
 
-        var UsersController = Route('/api/users', function () {
+        var UsersController = Route('/api/users')(function () {
 
         });
 

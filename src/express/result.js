@@ -112,10 +112,7 @@ function ViewResult(view, model) {
 utils.inherits(ViewResult, Result);
 
 ViewResult.prototype.renderOverride = function (res) {
-
-    // mockResponse render requires 3 arguments to catch the data correctly (2nd arg); passing null makes it work OK while
-    // NOTE: res.render() calls res.end();
-    res.render(this.view, this.model, null);
+    res.render(this.view, this.model);
 };
 
 
