@@ -1,10 +1,13 @@
 var utils = require('./utils');
 
-var list = {verb: 'get', path: ''},
-    get = {verb: 'get', path: '/:id', args: [getRequestParam('id')]},
-    put = {verb: 'put', path: '/:id', args: [getRequestParam('id'), getBodyValue()]},
-    post = {verb: 'post', path: '', args: [getBodyValue()]},
-    destroy = {verb: 'delete', path: '/:id', args: [getRequestParam('id')]};
+var list =      {verb: 'get', path: ''},
+    get =       {verb: 'get', path: '/:id', args: [getRequestParam('id')]},
+    put =       {verb: 'put', path: '/:id', args: [getRequestParam('id'), getBodyValue()]},
+    post =      {verb: 'post', path: '', args: [getBodyValue()]},
+    destroy =   {verb: 'delete', path: '/:id', args: [getRequestParam('id')]},
+    patch =     {verb: 'patch', path: '/:id', args: [getBodyValue()]},
+    options =   {verb: 'options', path: ''}
+;
 
 var actionMappings = {
     'list': list,
@@ -19,7 +22,11 @@ var actionMappings = {
     'create': post,
 
     'delete': destroy,
-    'destroy': destroy
+    'destroy': destroy,
+
+    'patch': patch,
+
+    'options': options
 };
 
 function getDefaultMapping(name) {
