@@ -32,7 +32,9 @@ var Route = withOverloads([
 
 
 function route_decorator(path, options) {
-    return function(fn) {
+    return function(target, key, descriptor) {
+        var fn = arguments.length === 1 ? target : descriptor;
+
         options = utils.extend({}, options);
 
         if (path) {
@@ -207,7 +209,9 @@ Route.http = withOverloads([
 ]);
 
 function http_decorator(verb, path, options) {
-    return function(fn) {
+    return function(target, key, descriptor) {
+        var fn = arguments.length === 1 ? target : descriptor;
+
         options = options || {};
 
         if (verb) {
@@ -219,7 +223,6 @@ function http_decorator(verb, path, options) {
         }
 
         fn.route = options;
-
         return fn;
     }
 }
