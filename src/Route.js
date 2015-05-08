@@ -33,7 +33,7 @@ var Route = withOverloads([
 
 function route_decorator(path, options) {
     return function(target, key, descriptor) {
-        var fn = typeof target === 'function' ? target : target[key];
+        var fn = typeof target === 'function' ? target : descriptor.value;
 
         options = utils.extend({}, options);
 
@@ -211,7 +211,7 @@ Route.http = withOverloads([
 
 function http_decorator(verb, path, options) {
     return function(target, key, descriptor) {
-        var fn = typeof target === 'function' ? target : target[key];
+        var fn = typeof target === 'function' ? target : descriptor.value;
 
         options = options || {};
 
