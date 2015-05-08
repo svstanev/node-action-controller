@@ -10,8 +10,11 @@ var Result = require('./result');
 
 var ActionBinding = require('../actionBindings').ActionBinding;
 
-function ExpressActionBinding(controller, action, controllerFactory) {
-    ActionBinding.call(this, controller, action, controllerFactory);
+function ExpressActionBinding(controller, action, options) {
+    ActionBinding.call(this, controller, action, options.controllerFactory);
+
+    this.transformError = options.transformError;
+    this.transformResult = options.transformResult;
 }
 
 utils.inherits(ExpressActionBinding, ActionBinding);
@@ -88,8 +91,7 @@ ExpressActionBinding.prototype.invokeAction = function (controller, args, res, n
     }
     catch (err) {
         this.logError('Error on action invocation', err);
-
-        result = Result.InternalError(err);
+        result = this.translateErrorToResult(err);
     }
 
     if (utils.isPromise(result)) {
@@ -98,6 +100,35 @@ ExpressActionBinding.prototype.invokeAction = function (controller, args, res, n
     else {
         this.renderResult(result, res, next);
     }
+};
+
+ExpressActionBinding.prototype.translateErrorToResult = function(err) {
+    if (utils.isFunction(this.transformError)) {
+        return this.transformError(err);
+    }
+
+    return Result.InternalError(err);
+}
+
+ExpressActionBinding.prototype.renderResult = function (result, res, next) {
+    if (!result || !result.render) {
+        result = Result.toResult(result);
+    }
+
+    result.render(res, next);
+};
+
+ExpressActionBinding.prototype.handlePromise = function (promise, res, next) {
+    var self = this;
+
+    promise
+        .catch(function (err) {
+            self.logError('Error invoking action (promise rejected)', err);
+            return self.translateErrorToResult(err);
+        })
+        .then(function (result) {
+            self.renderResult(result, res, next);
+        });
 };
 
 ExpressActionBinding.prototype.logError = function (description, err) {
@@ -131,26 +162,6 @@ ExpressActionBinding.prototype.logBinding = function () {
             this.action.route.verb.toUpperCase(),
             this.getPath(),
             this.action.route.name));
-};
-
-ExpressActionBinding.prototype.renderResult = function (result, res, next) {
-    if (!result || !result.render) {
-        result = Result.toResult(result);
-    }
-
-    result.render(res, next);
-};
-
-ExpressActionBinding.prototype.handlePromise = function (promise, res, next) {
-    var self = this;
-    promise
-        .catch(function (err) {
-            self.logError('Error invoking action (promise rejected)', err);
-            return Result.InternalError(err);
-        })
-        .then(function (result) {
-            self.renderResult(result, res, next);
-        });
 };
 
 function prepareHandlers(controller, action, actionHandler) {

@@ -32,14 +32,18 @@ var actionMappings = {
 function getDefaultMapping(name) {
     return {
         verb: 'get',
-        path: '/' + name.match(/([A-Z]?[^A-Z]*)/g).slice(0, -1).map(function (s) {
-            return s.toLowerCase();
-        }).join('/')
+        path: ''    //pathFromActionName(name)
     };
 }
 
 function getMappings(name) {
     return actionMappings[name];
+}
+
+function pathFromActionName(name) {
+    return '/' + name.match(/([A-Z]?[^A-Z]*)/g).slice(0, -1).map(function (s) {
+        return s.toLowerCase();
+    }).join('/');
 }
 
 module.exports.getDefaultMapping = getDefaultMapping;

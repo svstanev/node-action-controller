@@ -382,7 +382,7 @@ suite('controller tests', function () {
         function UsersController() {
         }
 
-        UsersController.prototype.myResources = Route.http({})(function () {
+        UsersController.prototype.myResources = Route.http('GET', '/my/resources')(function () {
             log.push('myResources');
         });
 
@@ -431,5 +431,53 @@ suite('controller tests', function () {
         assert.deepEqual(log, []);
 
     });
+
+    test('empty routing decorator', function() {
+        var log = [];
+        var UserController = Route('/user')(function() {
+
+        })
+
+        UserController.prototype.getUserProfile = Route.httpGet()(function() {
+            log.push('getUserProfile');
+        })
+
+        var req = httpMocks.createRequest({
+            method: 'get',
+            url: '/user'
+        });
+
+        var res = httpMocks.createResponse({eventEmitter: require('events').EventEmitter});
+
+        var router = expressMvc.routerFromController(UserController);
+
+        router.handle(req, res, next);
+
+        assert.deepEqual(log, ['getUserProfile']);
+    })
+
+    test('routing decorator with path', function() {
+        var log = [];
+        var UserController = Route('/user')(function() {
+
+        })
+
+        UserController.prototype.getUserProjects = Route.httpGet('projects')(function() {
+            log.push('getUserProjects');
+        })
+
+        var req = httpMocks.createRequest({
+            method: 'get',
+            url: '/user/projects'
+        });
+
+        var res = httpMocks.createResponse({eventEmitter: require('events').EventEmitter});
+
+        var router = expressMvc.routerFromController(UserController);
+
+        router.handle(req, res, next);
+
+        assert.deepEqual(log, ['getUserProjects']);
+    })
 
 });
