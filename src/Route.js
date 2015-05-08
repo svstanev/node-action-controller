@@ -33,7 +33,7 @@ var Route = withOverloads([
 
 function route_decorator(path, options) {
     return function(target, key, descriptor) {
-        var fn = typeof target === 'function' ? target : descriptor.value;
+        var fn = typeof target === 'function' ? target : target[key];
 
         options = utils.extend({}, options);
 
@@ -42,7 +42,8 @@ function route_decorator(path, options) {
         }
 
         fn.route = options;
-        return fn;
+
+        return descriptor || fn;
     }
 }
 
@@ -210,7 +211,7 @@ Route.http = withOverloads([
 
 function http_decorator(verb, path, options) {
     return function(target, key, descriptor) {
-        var fn = typeof target === 'function' ? target : descriptor.value;
+        var fn = typeof target === 'function' ? target : target[key];
 
         options = options || {};
 
@@ -223,7 +224,8 @@ function http_decorator(verb, path, options) {
         }
 
         fn.route = options;
-        return fn;
+
+        return descriptor || fn;
     }
 }
 
