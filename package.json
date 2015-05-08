@@ -1,6 +1,6 @@
 {
   "name": "node-action-controller",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "Simple Acton Controller for Node.js and Express web framework",
   "main": "index.js",
   "directories": {
