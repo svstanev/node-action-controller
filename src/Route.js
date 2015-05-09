@@ -1,6 +1,8 @@
 var utils = require('./utils');
 var withOverloads = require('./functionUtils').withOverloads;
 
+var slice =  Array.prototype.slice;
+
 /**
  *
  * @param path
@@ -16,14 +18,14 @@ var withOverloads = require('./functionUtils').withOverloads;
  */
 var Route = withOverloads([
     ['string', function (path) {
-        return route_decorator(path, null);
+        return route(path, null);
     }],
 
     ['object', function (options) {
-        return route_decorator(null, options);
+        return route(null, options);
     }],
 
-    ['string', 'object', route_decorator],
+    ['string', 'object', route],
 
     //['string',  'object', 'array', route_arr],
     //['string', 'array',  function(path, arr)    { return route_arr(path, null, arr); }],
@@ -31,32 +33,63 @@ var Route = withOverloads([
 ]);
 
 
-function route_decorator(path, options) {
+function route(path, options) {
     return function(target, key, descriptor) {
-        var fn = typeof target === 'function' ? target : descriptor.value;
+        var controller = typeof target === 'function' ? target : descriptor.value;
+        var route = controller.route || {};
 
-        options = utils.extend({}, options);
+        utils.extend(route, options);
 
         if (path) {
-            options.path = path;
+            route.path = path;
         }
 
-        fn.route = options;
+        controller.route = route;
 
-        return descriptor || fn;
+        return descriptor || controller;
     }
 }
 
 /**
  *
- * @return {Function}
  */
-Route.httpIgnore = function () {
-    return function(fn) {
-        fn.route = {ignore: true};
-        return fn;
+Route.httpArgs = function() {
+    var args = slice.call(arguments);
+    return function(target, key, descriptor) {
+        var action = utils.isFunction(target) ? target : descriptor.value;
+        var route = action.route || {};
+        var routeArgs = route.args || [];
+
+        [].push.apply(routeArgs, args);
+
+        route.args = routeArgs;
+        action.route = route;
+
+        return descriptor || action;
     };
 };
+
+/**
+ *
+ * @return {Function}
+ */
+Route.httpIgnore = function (target, key, descriptor) {
+    if (arguments.length === 0) {
+        return httpIgnore;
+    }
+
+    return httpIgnore(target, key, descriptor);
+};
+
+function httpIgnore(target, key, descriptor) {
+    var action = utils.isFunction(target) ? target : descriptor.value;
+    var route = action.route || {};
+
+    route.ignore = true;
+    action.route = route;
+
+    return descriptor || action;
+}
 
 /**
  *
@@ -68,7 +101,7 @@ Route.httpIgnore = function () {
  * Route.httpGet(path, options)(actionHandler)
  */
 Route.httpGet = function (path, options) {
-    return Route.http.apply(null, ['get'].concat(Array.prototype.slice.call(arguments)));
+    return Route.http.apply(null, ['get'].concat(slice.call(arguments)));
 };
 
 /**
@@ -82,7 +115,7 @@ Route.httpGet = function (path, options) {
  *
  */
 Route.httpPut = function (path, options) {
-    return Route.http.apply(null, ['put'].concat(Array.prototype.slice.call(arguments)));
+    return Route.http.apply(null, ['put'].concat(slice.call(arguments)));
 };
 
 
@@ -97,7 +130,7 @@ Route.httpPut = function (path, options) {
  *
  */
 Route.httpPatch = function (path, options) {
-    return Route.http.apply(null, ['patch'].concat(Array.prototype.slice.call(arguments)));
+    return Route.http.apply(null, ['patch'].concat(slice.call(arguments)));
 };
 
 /**
@@ -111,7 +144,7 @@ Route.httpPatch = function (path, options) {
  *
  */
 Route.httpPost = function (path, options) {
-    return Route.http.apply(null, ['post'].concat(Array.prototype.slice.call(arguments)));
+    return Route.http.apply(null, ['post'].concat(slice.call(arguments)));
 };
 
 /**
@@ -125,7 +158,7 @@ Route.httpPost = function (path, options) {
  *
  */
 Route.httpDelete = function (path, options) {
-    return Route.http.apply(null, ['delete'].concat(Array.prototype.slice.call(arguments)));
+    return Route.http.apply(null, ['delete'].concat(slice.call(arguments)));
 };
 
 
@@ -173,66 +206,62 @@ Route.httpDelete = function (path, options) {
  */
 Route.http = withOverloads([
     ['object', function (options) {
-        return http_decorator(null, null, options);
+        return http(null, null, options);
     }],
 
     ['string', function (verb) {
-        return http_decorator(verb, null, null);
+        return http(verb, null, null);
     }],
 
     ['object', 'array', function (options, args) {
-        return http_args_decorator(null, null, options, args);
+        return http_args(null, null, options, args);
     }],
 
     ['string', 'array', function (verb, args) {
-        return http_args_decorator(verb, null, null, args);
+        return http_args(verb, null, null, args);
     }],
 
     ['string', 'string', function (verb, path) {
-        return http_decorator(verb, path, null);
+        return http(verb, path, null);
     }],
 
     ['string', 'object', function (verb, options) {
-        return http_decorator(verb, null, options);
+        return http(verb, null, options);
     }],
 
     ['string', 'string', 'array', function (verb, path, args) {
-        return http_args_decorator(verb, path, null, args);
+        return http_args(verb, path, null, args);
     }],
 
     ['string', 'object', 'array', function (verb, options, args) {
-        return http_args_decorator(verb, null, options, args);
+        return http_args(verb, null, options, args);
     }],
 
-    ['string', 'string', 'object', http_decorator],
+    ['string', 'string', 'object', http],
 
-    ['string', 'string', 'object', 'array', http_args_decorator],
+    ['string', 'string', 'object', 'array', http_args],
 ]);
 
-function http_decorator(verb, path, options) {
+function http(verb, path, options) {
     return function(target, key, descriptor) {
-        var fn = typeof target === 'function' ? target : descriptor.value;
-
-        options = options || {};
-
+        var action = utils.isFunction(target) ? target : descriptor.value;
+        var route = action.route || {};
+        utils.extend(route, options);
         if (verb) {
-            options.verb = verb;
+            route.verb = verb;
         }
-
         if (path) {
-            options.path = path;
+            route.path = path;
         }
-
-        fn.route = options;
-
-        return descriptor || fn;
+        action.route = route;
+        return descriptor || action;
     }
 }
 
-function http_args_decorator(verb, path, options, args) {
+function http_args(verb, path, options, args) {
     options = utils.extend({}, options, { args: args });
 
-    return http_decorator(verb, path, options);
+    return http(verb, path, options);
 }
 
 module.exports.Route = Route;
