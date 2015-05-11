@@ -34,8 +34,8 @@ var Route = withOverloads([
 
 
 function route(path, options) {
-    return function(target, key, descriptor) {
-        var controller = typeof target === 'function' ? target : descriptor.value;
+    return function(target) {
+        var controller = target;
         var route = controller.route || {};
 
         utils.extend(route, options);
@@ -46,7 +46,7 @@ function route(path, options) {
 
         controller.route = route;
 
-        return descriptor || controller;
+        return target;
     }
 }
 
