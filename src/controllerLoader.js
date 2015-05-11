@@ -59,7 +59,10 @@ ControllerLoader.prototype.loadFromFile = function (info) {
             controller = require(modulePath);
         }
         catch (err) {
-            error(utils.format('Error loading module %s - %s', modulePath, err));
+            error(utils.format('!!!-----\n' +
+            'Error loading module %s - %s\n' +
+            '%s\n' +
+            '-----!!!', modulePath, err, err.stack));
         }
 
         if (utils.isFunction(controller)) {
