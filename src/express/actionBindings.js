@@ -148,7 +148,8 @@ ExpressActionBinding.prototype.logError = function (description, err) {
         this.action.route.name)
         .appendLine('\tController: {0}', this.controller.route.src)
         .appendLine('\tError:')
-        .append('\t\t{0}', err)
+        .append('\t\t{0}', err.message || err)
+        .append('\t\t{0}', err.stack || '<No stack trace available>')
         .toString(function (err, str) {
             debug(str);
         })
