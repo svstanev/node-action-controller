@@ -3,7 +3,7 @@ var assert = require('assert');
 
 var utils = require('./utils');
 var functionUtils = require('./functionUtils');
-var actionMappings = require('./actionMappings');
+//var actionMappings = require('./actionMappings');
 
 /**
  * @class ActionBinding
@@ -27,12 +27,10 @@ ActionBinding.prototype.getPath = function () {
     return actionPath;
 };
 
-ActionBinding.prototype.resolveArguments = function () {
-    var args = Array.prototype.concat.call(
+ActionBinding.prototype.getArguments = function () {
+    return Array.prototype.concat.call(
         getArgumentsForController(this.controller),
         getArgumentsForAction(this.action));
-
-    return args.map(actionMappings.resolveArgumentMapping);
 };
 
 ActionBinding.prototype.createControllerInstance = function (context) {
@@ -41,7 +39,7 @@ ActionBinding.prototype.createControllerInstance = function (context) {
 
 ActionBinding.prototype.getActionArguments = function () {
     if (!this.actionArguments) {
-        this.actionArguments = this.resolveArguments();
+        this.actionArguments = this.resolveArguments(this.getArguments());
     }
 
     return this.actionArguments;
@@ -50,19 +48,18 @@ ActionBinding.prototype.getActionArguments = function () {
 
 function resolveArgumentsFromDefinition(action) {
     return functionUtils.getArgNames(action)
-        .map(actionMappings.getValue);
+        //.map(actionMappings.getValue)
+        ;
 }
 
 function getArgumentsForAction(action) {
     var args = action.route.args;
 
-    assert(!args || Array.isArray(args));
-
-    if (!args || !args.length) {
-        args = resolveArgumentsFromDefinition(action);
+    if (Array.isArray(args) && args.length > 0) {
+        return args;
     }
 
-    return args;
+    return resolveArgumentsFromDefinition(action);
 }
 
 function getArgumentsForController(controller) {
@@ -72,13 +69,11 @@ function getArgumentsForController(controller) {
         args = route.args;
     }
 
-    assert(!args || Array.isArray(args));
-
-    if (!args || !args.length) {
-        args = [];
+    if (Array.isArray(args)) {
+        return args;
     }
 
-    return args;
+    return [];
 }
 
 

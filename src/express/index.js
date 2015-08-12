@@ -1,12 +1,19 @@
 var initControllersCore = require('../init').initControllers;
+var utils = require('../utils');
 var ExpressControllerBinder = require('./controllerBinder').ExpressControllerBinder;
 
 function initControllers(express, options, controllerFactory) {
 
     controllerFactory = controllerFactory || options.controllerFactory || options.factory;
 
+    var binderOptions = {
+        controllerFactory: controllerFactory,
+        transformResult: options.transformResult,
+        transformError: options.transformError
+    }
+
     var controllerBinder = function (controller) {
-        new ExpressControllerBinder(controller, controllerFactory)
+        new ExpressControllerBinder(controller, binderOptions)
             .bind(express);
     };
 
@@ -15,19 +22,23 @@ function initControllers(express, options, controllerFactory) {
     return express;
 }
 
-function routerFromController(controller, controllerFactory) {
-    return bindController(require('express').Router(), controller, controllerFactory);
+function routerFromController(controller, options) {
+    return bindController(require('express').Router(), controller, options);
 }
 
-function bindController(express, controller, controllerFactory) {
+function bindController(express, controller, options) {
+    var controllerFactory = utils.isFunction(options) ? options : null;
+    var binderOptions = {
+        controllerFactory: controllerFactory,
+    }
 
-    new ExpressControllerBinder(controller, controllerFactory)
+    new ExpressControllerBinder(controller, binderOptions)
         .bind(express);
 
     return express;
 }
 
-module.exports.initControllers = initControllers;
+//module.exports.initControllers = initControllers;
 module.exports.routerFromController = routerFromController;
 module.exports.bindController = bindController;
 

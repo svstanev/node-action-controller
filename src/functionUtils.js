@@ -19,3 +19,42 @@ module.exports.getArgNames = function getArgNames(fn) {
     });
     return args;
 };
+
+
+function getType(o) {
+    if (Array.isArray(o)) {
+        return 'array';
+    }
+    return typeof(o);
+}
+
+module.exports.withOverloads = function withOverloads(overloads) {
+    return function () {
+        var self = this;
+        var args = Array.prototype.slice.call(arguments);
+        var argTypes = args.map(getType);
+
+        var argCount = argTypes.length, fn;
+
+        overloads.some(function (overload) {
+            if (overload.length === argCount + 1) {
+                var match = true;
+                for (var i = 0; match && i < argCount; i++) {
+                    match = overload[i] === argTypes[i];
+                }
+
+                if (match) {
+                    fn = overload[overload.length - 1];
+                }
+            }
+
+            return fn;
+        });
+
+        if (fn) {
+            return fn.apply(self, arguments);
+        }
+
+        throw new Error('cannot invoke function with arguments [' + argTypes.join(', ') + ']');
+    };
+}

@@ -1,79 +1,31 @@
 var utils = require('./utils');
-var assert = require('assert');
-var fs = require('fs');
-var path = require('path');
+var withOverloads = require('./functionUtils').withOverloads;
 
-function getType(o) {
-    if (Array.isArray(o)) {
-        return 'array';
-    }
-    return typeof(o);
-}
-
-function withOverloads(overloads) {
-    return function () {
-        var self = this;
-        var args = Array.prototype.slice.call(arguments);
-        var argTypes = args.map(getType);
-
-        var argCount = argTypes.length, fn;
-
-        overloads.some(function (overload) {
-            if (overload.length === argCount + 1) {
-                var match = true;
-                for (var i = 0; match && i < argCount; i++) {
-                    match = overload[i] === argTypes[i];
-                }
-
-                if (match) {
-                    fn = overload[overload.length - 1];
-                }
-            }
-
-            return fn;
-        });
-
-        if (fn) {
-            return fn.apply(self, arguments);
-        }
-
-        throw new Error('cannot invoke function with arguments [' + argTypes.join(', ') + ']');
-    };
-}
-
-function split_arr(arr) {
-    var args = arr.slice(0, -1);
-    var fn = arr.slice(-1)[0];
-
-    return {
-        options: {args: args},
-        fn: fn
-    };
-}
-
+var slice =  Array.prototype.slice;
 
 /**
  *
  * @param path
  * @param options
- * @param fn
- * @return {*}
+ * @return {function(controllerConstructor)}
  * @constructor
  *
  *
- * Route(path, fn)
- * Route(options, fn)
- * Route(path, options, fn)
+ * Route(path)(controllerConstructor)
+ * Route(options)(controllerConstructor)
+ * Route(path, options)(controllerConstructor)
  *
  */
 var Route = withOverloads([
-    ['string', 'function', function (path, fn) {
-        return route_fn(path, null, fn);
+    ['string', function (path) {
+        return route(path, null);
     }],
-    ['object', 'function', function (options, fn) {
-        return route_fn(null, options, fn);
+
+    ['object', function (options) {
+        return route(null, options);
     }],
-    ['string', 'object', 'function', route_fn],
+
+    ['string', 'object', route],
 
     //['string',  'object', 'array', route_arr],
     //['string', 'array',  function(path, arr)    { return route_arr(path, null, arr); }],
@@ -81,97 +33,137 @@ var Route = withOverloads([
 ]);
 
 
-function route_fn(path, options, fn) {
-    options = utils.extend({}, options);
+function route(path, options) {
+    return function(target) {
+        var controller = target;
+        var route = controller.route || {};
 
-    if (path) {
-        options.path = path;
+        utils.extend(route, options);
+
+        if (path) {
+            route.path = path;
+        }
+
+        controller.route = route;
+
+        return target;
+    }
+}
+
+/**
+ *
+ */
+Route.httpArgs = function() {
+    var args = slice.call(arguments);
+    return function(target, key, descriptor) {
+        var action = utils.isFunction(target) ? target : descriptor.value;
+        var route = action.route || {};
+        var routeArgs = route.args || [];
+
+        [].push.apply(routeArgs, args);
+
+        route.args = routeArgs;
+        action.route = route;
+
+        return descriptor || action;
+    };
+};
+
+/**
+ *
+ * @return {Function}
+ */
+Route.httpIgnore = function (target, key, descriptor) {
+    if (arguments.length === 0) {
+        return httpIgnore;
     }
 
-    fn.route = options;
-    return fn;
+    return httpIgnore(target, key, descriptor);
+};
+
+function httpIgnore(target, key, descriptor) {
+    var action = utils.isFunction(target) ? target : descriptor.value;
+    var route = action.route || {};
+
+    route.ignore = true;
+    action.route = route;
+
+    return descriptor || action;
 }
 
-function route_arr(path, options, arr) {
-    var parts = split_arr(arr);
-
-    options = utils.extend({}, options, parts.options);
-
-    return route_fn(path, options, parts.fn);
-}
-
-
-function concat(item, args) {
-    return [item].concat(Array.prototype.slice.call(args));
-}
-
-Route.httpIgnore = function (fn) {
-    fn.route = {ignore: true};
-    return fn;
+/**
+ *
+ * @param path
+ * @param options
+ * @return {*}
+ *
+ * Route.httpGet(options)(actionHandler)
+ * Route.httpGet(path, options)(actionHandler)
+ */
+Route.httpGet = function (path, options) {
+    return Route.http.apply(null, ['get'].concat(slice.call(arguments)));
 };
 
 /**
  *
  * @param path
  * @param options
- * @param fn
  * @return {*}
  *
- * Route.httpGet(options, actionHandler)
- * Route.httpGet(path, options, actionHandler)
+ * Route.httpPut(options)(actionHandler)
+ * Route.httpPut(path, options)(actionHandler)
+ *
  */
-Route.httpGet = function (path, options, fn) {
-    return Route.http.apply(null, ['get'].concat(Array.prototype.slice.call(arguments)));
+Route.httpPut = function (path, options) {
+    return Route.http.apply(null, ['put'].concat(slice.call(arguments)));
+};
+
+
+/**
+ *
+ * @param path
+ * @param options
+ * @return {*}
+ *
+ * Route.httpPatch(options)(actionHandler)
+ * Route.httpPatch(path, options)(actionHandler)
+ *
+ */
+Route.httpPatch = function (path, options) {
+    return Route.http.apply(null, ['patch'].concat(slice.call(arguments)));
 };
 
 /**
  *
  * @param path
  * @param options
- * @param fn
  * @return {*}
  *
- * Route.httpGet(options, actionHandler)
- * Route.httpGet(path, options, actionHandler)
+ * Route.httpPost(options)(actionHandler)
+ * Route.httpPost(path, options)(actionHandler)
  *
  */
-Route.httpPut = function (path, options, fn) {
-    return Route.http.apply(null, ['put'].concat(Array.prototype.slice.call(arguments)));
+Route.httpPost = function (path, options) {
+    return Route.http.apply(null, ['post'].concat(slice.call(arguments)));
 };
 
 /**
  *
  * @param path
  * @param options
- * @param fn
  * @return {*}
  *
- * Route.httpPost(options, actionHandler)
- * Route.httpPost(path, options, actionHandler)
+ * Route.httpDelete(options)(actionHandler)
+ * Route.httpDelete(path, options)(actionHandler)
  *
  */
-Route.httpPost = function (path, options, fn) {
-    return Route.http.apply(null, ['post'].concat(Array.prototype.slice.call(arguments)));
-};
-
-/**
- *
- * @param path
- * @param options
- * @param fn
- * @return {*}
- *
- * Route.httpDelete(options, actionHandler)
- * Route.httpDelete(path, options, actionHandler)
- *
- */
-Route.httpDelete = function (path, options, fn) {
-    return Route.http.apply(null, ['delete'].concat(Array.prototype.slice.call(arguments)));
+Route.httpDelete = function (path, options) {
+    return Route.http.apply(null, ['delete'].concat(slice.call(arguments)));
 };
 
 
 /**
- * Route.http(options, actionHandler)
+ * Route.http(options)(actionHandler)
  * Ex.:
  * Route.http({
  *      verb: 'get',
@@ -182,7 +174,7 @@ Route.httpDelete = function (path, options, fn) {
  *    },
  *    fn)
  *
- * Route.http(verb, options, actionHandler)
+ * Route.http(verb, options)(actionHandler)
  * Ex.:
  * Route.http(
  *    'get',
@@ -194,7 +186,7 @@ Route.httpDelete = function (path, options, fn) {
  *    },
  *    fn)
  *
- * Route.http(verb, path, options, actionHandler)
+ * Route.http(verb, path, options)(actionHandler)
  * Ex.:
  * Route.http(
  *    'get',
@@ -213,58 +205,63 @@ Route.httpDelete = function (path, options, fn) {
  * @return {*}
  */
 Route.http = withOverloads([
-    ['object', 'function', function (options, fn) {
-        return http_fn(null, null, options, fn);
-    }],
-    ['string', 'function', function (verb, fn) {
-        return http_fn(verb, null, null, fn);
-    }],
-    ['object', 'array', function (options, arr) {
-        return http_arr(null, null, options, arr);
-    }],
-    ['string', 'array', function (verb, arr) {
-        return http_arr(verb, null, null, arr);
+    ['object', function (options) {
+        return http(null, null, options);
     }],
 
-    ['string', 'string', 'function', function (verb, path, fn) {
-        return http_fn(verb, path, null, fn);
-    }],
-    ['string', 'object', 'function', function (verb, options, fn) {
-        return http_fn(verb, null, options, fn);
-    }],
-    ['string', 'string', 'array', function (verb, path, arr) {
-        return http_arr(verb, path, null, arr);
-    }],
-    ['string', 'object', 'array', function (verb, options, arr) {
-        return http_arr(verb, null, options, arr);
+    ['string', function (verb) {
+        return http(verb, null, null);
     }],
 
-    ['string', 'string', 'object', 'function', http_fn],
-    ['string', 'string', 'object', 'array', http_arr],
+    ['object', 'array', function (options, args) {
+        return http_args(null, null, options, args);
+    }],
+
+    ['string', 'array', function (verb, args) {
+        return http_args(verb, null, null, args);
+    }],
+
+    ['string', 'string', function (verb, path) {
+        return http(verb, path, null);
+    }],
+
+    ['string', 'object', function (verb, options) {
+        return http(verb, null, options);
+    }],
+
+    ['string', 'string', 'array', function (verb, path, args) {
+        return http_args(verb, path, null, args);
+    }],
+
+    ['string', 'object', 'array', function (verb, options, args) {
+        return http_args(verb, null, options, args);
+    }],
+
+    ['string', 'string', 'object', http],
+
+    ['string', 'string', 'object', 'array', http_args],
 ]);
 
-function http_fn(verb, path, options, fn) {
-
-    options = options || {};
-
-    if (verb) {
-        options.verb = verb;
+function http(verb, path, options) {
+    return function(target, key, descriptor) {
+        var action = utils.isFunction(target) ? target : descriptor.value;
+        var route = action.route || {};
+        utils.extend(route, options);
+        if (verb) {
+            route.verb = verb;
+        }
+        if (path) {
+            route.path = path;
+        }
+        action.route = route;
+        return descriptor || action;
     }
-
-    if (path) {
-        options.path = path;
-    }
-
-    fn.route = options;
-    return fn;
 }
 
-function http_arr(verb, path, options, arr) {
-    var parts = split_arr(arr);
+function http_args(verb, path, options, args) {
+    options = utils.extend({}, options, { args: args });
 
-    options = utils.extend({}, options, parts.options);
-
-    return http_fn(verb, path, options, parts.fn);
+    return http(verb, path, options);
 }
 
 module.exports.Route = Route;

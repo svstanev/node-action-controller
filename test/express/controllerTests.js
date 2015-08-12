@@ -9,6 +9,7 @@ var Result = expressMvc.Result;
 suite('controller tests', function () {
     var next = function () {
     };
+
     test('instantiate/dispose controller for each action', function () {
         var log = [];
 
@@ -211,7 +212,7 @@ suite('controller tests', function () {
             log.push(['ctor']);
         }
 
-        UsersController.prototype.index = Route.httpPut('/api/users/:id', function (id, data) {
+        UsersController.prototype.index = Route.httpPut('/api/users/:id')(function (id, data) {
             log.push(['index', id]);
             return 'index @' + id;
         });
@@ -274,11 +275,9 @@ suite('controller tests', function () {
             next();
         }
 
-        var UsersController = Route('/api/users',
-            {before: controllerBefore, after: controllerAfter},
-            function () {
-                log.push('--- ctor ---');
-            });
+        var UsersController = Route('/api/users', {before: controllerBefore, after: controllerAfter})(function () {
+            log.push('--- ctor ---');
+        });
 
         UsersController.prototype.dispose = function () {
             log.push('--- dispose ---');
@@ -287,28 +286,28 @@ suite('controller tests', function () {
         UsersController.prototype.get = Route.httpGet('/:id', {
             before: actionBefore,
             after: actionAfter
-        }, function (id) {
+        })(function (id) {
             log.push(['get', id]);
 
             // continue to the after filters
             return Result.Continue();
         });
 
-        UsersController.prototype.xxx = Route.httpGet('/:id/xxx', {before: actionBefore}, function (id) {
+        UsersController.prototype.xxx = Route.httpGet('/:id/xxx', {before: actionBefore})(function (id) {
             log.push(['get', 'xxx', id]);
 
             // continue to the after filters
             return Result.Continue();
         });
 
-        UsersController.prototype.yyy = Route.httpGet('/:id/yyy', {after: actionAfter}, function (id) {
+        UsersController.prototype.yyy = Route.httpGet('/:id/yyy', {after: actionAfter})(function (id) {
             log.push(['get', 'yyy', id]);
 
             // continue to the after filters
             return Result.Continue();
         });
 
-        UsersController.prototype.zzz = Route.httpGet('/:id/zzz', function (id) {
+        UsersController.prototype.zzz = Route.httpGet('/:id/zzz')(function (id) {
             log.push(['get', 'zzz', id]);
 
             // continue to the after filters
@@ -383,7 +382,7 @@ suite('controller tests', function () {
         function UsersController() {
         }
 
-        UsersController.prototype.myResources = Route.http({}, function () {
+        UsersController.prototype.myResources = Route.http('GET', '/my/resources')(function () {
             log.push('myResources');
         });
 
@@ -432,5 +431,53 @@ suite('controller tests', function () {
         assert.deepEqual(log, []);
 
     });
+
+    test('empty routing decorator', function() {
+        var log = [];
+        var UserController = Route('/user')(function() {
+
+        })
+
+        UserController.prototype.getUserProfile = Route.httpGet()(function() {
+            log.push('getUserProfile');
+        })
+
+        var req = httpMocks.createRequest({
+            method: 'get',
+            url: '/user'
+        });
+
+        var res = httpMocks.createResponse({eventEmitter: require('events').EventEmitter});
+
+        var router = expressMvc.routerFromController(UserController);
+
+        router.handle(req, res, next);
+
+        assert.deepEqual(log, ['getUserProfile']);
+    })
+
+    test('routing decorator with path', function() {
+        var log = [];
+        var UserController = Route('/user')(function() {
+
+        })
+
+        UserController.prototype.getUserProjects = Route.httpGet('projects')(function() {
+            log.push('getUserProjects');
+        })
+
+        var req = httpMocks.createRequest({
+            method: 'get',
+            url: '/user/projects'
+        });
+
+        var res = httpMocks.createResponse({eventEmitter: require('events').EventEmitter});
+
+        var router = expressMvc.routerFromController(UserController);
+
+        router.handle(req, res, next);
+
+        assert.deepEqual(log, ['getUserProjects']);
+    })
 
 });

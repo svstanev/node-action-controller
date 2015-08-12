@@ -14,7 +14,7 @@ suite('express/routeTests', function () {
         var output = [];
         var disposeCount = 0;
 
-        var UsersController = Route('/api/users', function () {
+        var UsersController = Route('/api/users')(function () {
 
         });
 
@@ -77,7 +77,7 @@ suite('express/routeTests', function () {
 
     test('controller -- usage', function () {
         // api/users
-        var UserController = Route('/api/users', function (userManager) {
+        var UserController = Route('/api/users')(function (userManager) {
             this.users = {};
         });
 
@@ -89,10 +89,9 @@ suite('express/routeTests', function () {
         //  UserController.prototype.get = function() {  };
         //  UserController.prototype.index = function() {  }; <-- should return View?
 
-        Route.httpGet('',
-            UserController.prototype.getUsers = function () {
+        Route.httpGet('')(UserController.prototype.getUsers = function () {
 
-            });
+        });
 
 
         // GET api/users/:id
@@ -101,10 +100,9 @@ suite('express/routeTests', function () {
         //  UserController.prototype.get = function(id) {  };
         //  UserController.prototype.index = function(id) {  }; <-- should return View?
 
-        Route.httpGet('/:id',
-            UserController.prototype.getUser = function (id) {
-                return this.users[id];
-            });
+        Route.httpGet('/:id')(UserController.prototype.getUser = function (id) {
+            return this.users[id];
+        });
 
         // POST api/users
         //
@@ -143,10 +141,9 @@ suite('express/routeTests', function () {
         // Alterntives:
         //  UserController.prototype.delete = function(id) { };
 
-        Route.httpDelete('/:id',
-            UserController.prototype.deleteUser = function (id) {
+        Route.httpDelete('/:id')(UserController.prototype.deleteUser = function (id) {
 
-            });
+        });
 
         /*
 

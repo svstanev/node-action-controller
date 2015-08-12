@@ -12,7 +12,7 @@ suite('routeTests', function () {
             return ('' + name).toUpperCase();
         }
 
-        var result = Route.httpGet('/name', action);
+        var result = Route.httpGet('/name')(action);
 
         assert.equal(result, action);
         assert.deepEqual(action.route, {verb: 'get', path: '/name'});
@@ -23,7 +23,7 @@ suite('routeTests', function () {
             return ('' + name).toUpperCase();
         }
 
-        var result = Route.httpPut('/name', action);
+        var result = Route.httpPut('/name')(action);
 
         assert.equal(result, action);
         assert.deepEqual(action.route, {verb: 'put', path: '/name'});
@@ -34,7 +34,7 @@ suite('routeTests', function () {
             return ('' + name).toUpperCase();
         }
 
-        var result = Route.httpPost('/name', action);
+        var result = Route.httpPost('/name')(action);
 
         assert.equal(result, action);
         assert.deepEqual(action.route, {verb: 'post', path: '/name'});
@@ -45,7 +45,7 @@ suite('routeTests', function () {
             return ('' + name).toUpperCase();
         }
 
-        var result = Route.httpDelete('/name', action);
+        var result = Route.httpDelete('/name')(action);
 
         assert.equal(result, action);
         assert.deepEqual(action.route, {verb: 'delete', path: '/name'});
@@ -56,7 +56,7 @@ suite('routeTests', function () {
             return name;
         }
 
-        var result = Route.http('HEAD', '/name', {args: [1, 2, 3]}, action);
+        var result = Route.http('HEAD', '/name', {args: [1, 2, 3]})(action);
 
         assert.equal(result, action);
         assert.deepEqual(action.route, {verb: 'HEAD', path: '/name', args: [1, 2, 3]});
@@ -67,7 +67,7 @@ suite('routeTests', function () {
 
         }
 
-        var usersController = Route('/api/users', UsersController);
+        var usersController = Route('/api/users')(UsersController);
 
         assert.equal(UsersController, usersController);
         assert.deepEqual(usersController.route, {path: '/api/users'});
@@ -77,7 +77,7 @@ suite('routeTests', function () {
         function myAction() {
         }
 
-        var action = Route.httpGet([1, 2, 3, myAction]);
+        var action = Route.httpGet([1, 2, 3])(myAction);
 
         assert.deepEqual({verb: 'get', args: [1, 2, 3]}, action.route);
         assert.strictEqual(action, myAction);
@@ -87,7 +87,7 @@ suite('routeTests', function () {
         function myAction() {
         }
 
-        var action = Route.httpGet('/path/to/my/resource/action', [1, 2, 3, myAction]);
+        var action = Route.httpGet('/path/to/my/resource/action', [1, 2, 3])(myAction);
 
         assert.deepEqual({verb: 'get', args: [1, 2, 3], path: '/path/to/my/resource/action'}, action.route);
         assert.strictEqual(action, myAction);
@@ -97,7 +97,7 @@ suite('routeTests', function () {
         function myAction() {
         }
 
-        var action = Route.httpGet('/path/to/my/resource/action', {prop: 'abc'}, [1, 2, 3, myAction]);
+        var action = Route.httpGet('/path/to/my/resource/action', {prop: 'abc'}, [1, 2, 3])(myAction);
 
         assert.deepEqual({
             verb: 'get',

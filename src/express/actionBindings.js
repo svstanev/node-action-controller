@@ -10,11 +10,18 @@ var Result = require('./result');
 
 var ActionBinding = require('../actionBindings').ActionBinding;
 
-function ExpressActionBinding(controller, action, controllerFactory) {
-    ActionBinding.call(this, controller, action, controllerFactory);
+function ExpressActionBinding(controller, action, options) {
+    ActionBinding.call(this, controller, action, options.controllerFactory);
+
+    this.transformError = options.transformError;
+    this.transformResult = options.transformResult;
 }
 
 utils.inherits(ExpressActionBinding, ActionBinding);
+
+ExpressActionBinding.prototype.resolveArguments = function (args) {
+    return args.map(resolveArgumentMapping);
+};
 
 ExpressActionBinding.prototype.resolveExpressAction = function (express) {
     var verb = (this.action.route.verb || 'get').toLowerCase();
@@ -84,8 +91,7 @@ ExpressActionBinding.prototype.invokeAction = function (controller, args, res, n
     }
     catch (err) {
         this.logError('Error on action invocation', err);
-
-        result = Result.InternalError(err);
+        result = this.translateErrorToResult(err);
     }
 
     if (utils.isPromise(result)) {
@@ -94,6 +100,35 @@ ExpressActionBinding.prototype.invokeAction = function (controller, args, res, n
     else {
         this.renderResult(result, res, next);
     }
+};
+
+ExpressActionBinding.prototype.translateErrorToResult = function(err) {
+    if (utils.isFunction(this.transformError)) {
+        return this.transformError(err);
+    }
+
+    return Result.InternalError(err);
+}
+
+ExpressActionBinding.prototype.renderResult = function (result, res, next) {
+    if (!result || !result.render) {
+        result = Result.toResult(result);
+    }
+
+    result.render(res, next);
+};
+
+ExpressActionBinding.prototype.handlePromise = function (promise, res, next) {
+    var self = this;
+
+    promise
+        .catch(function (err) {
+            self.logError('Error invoking action (promise rejected)', err);
+            return self.translateErrorToResult(err);
+        })
+        .then(function (result) {
+            self.renderResult(result, res, next);
+        });
 };
 
 ExpressActionBinding.prototype.logError = function (description, err) {
@@ -113,7 +148,8 @@ ExpressActionBinding.prototype.logError = function (description, err) {
         this.action.route.name)
         .appendLine('\tController: {0}', this.controller.route.src)
         .appendLine('\tError:')
-        .append('\t\t{0}', err)
+        .append('\t\t{0}', err.message || err)
+        .append('\t\t{0}', err.stack || '<No stack trace available>')
         .toString(function (err, str) {
             debug(str);
         })
@@ -127,26 +163,6 @@ ExpressActionBinding.prototype.logBinding = function () {
             this.action.route.verb.toUpperCase(),
             this.getPath(),
             this.action.route.name));
-};
-
-ExpressActionBinding.prototype.renderResult = function (result, res, next) {
-    if (!result || !result.render) {
-        result = Result.toResult(result);
-    }
-
-    result.render(res, next);
-};
-
-ExpressActionBinding.prototype.handlePromise = function (promise, res, next) {
-    var self = this;
-    promise
-        .catch(function (err) {
-            self.logError('Error invoking action (promise rejected)', err);
-            return Result.InternalError(err);
-        })
-        .then(function (result) {
-            self.renderResult(result, res, next);
-        });
 };
 
 function prepareHandlers(controller, action, actionHandler) {
@@ -205,3 +221,90 @@ module.exports.ExpressActionBinding = ExpressActionBinding;
  module.exports.ExpressRouterActionBinding = ExpressRouterActionBinding;
  */
 
+
+
+function getRequestParam(name) {
+    return function (req) {
+        return req.params[name];
+    };
+}
+
+function getRequestValue(name) {
+    return function (req) {
+        return req[name];
+    };
+}
+
+function getBodyValue(name) {
+    return function (req) {
+        return req.body[name];
+    };
+}
+
+function getQueryParam(name, req) {
+    return function (req) {
+        return req.query[name];
+    };
+}
+
+function getOther(name) {
+    return function(req) {
+        switch (name) {
+            case 'body':
+            case 'data':
+                return req.body;
+
+            default:
+                return null;
+        }
+    }
+}
+
+function getValue(name) {
+    var param = getRequestParam(name);
+    var body = getBodyValue(name);
+    var query = getQueryParam(name);
+    var other = getOther(name);
+
+    return function (req) {
+        return param(req) || query(req) || body(req) || other(req);
+    };
+}
+
+
+function getArgValueAccessor(src) {
+    switch (src) {
+        default:
+            //case 'params':
+            //case 'url':
+            return getRequestParam;
+
+        case 'body':
+            return getBodyValue;
+
+        case 'query':
+            return getQueryParam;
+
+        case 'request':
+            return getRequestValue;
+    }
+}
+
+function resolveArgumentMapping(mapping) {
+    if (utils.isFunction(mapping)) {
+        // Ex.: function (req) { return req.body.name; }
+        return mapping;
+    }
+
+    if (utils.isString(mapping)) {
+        // Ex.: 'name' -> (req.params.name || req.body.name || req.query.name)
+        return getValue(mapping);
+    }
+
+    if (utils.isObject(mapping)) {
+        // Ex.: { src: 'body', name: 'firstName' }
+        return getArgValueAccessor(mapping.src)(mapping.name);
+    }
+
+    throw new Error('Invalid argument mapping');
+}

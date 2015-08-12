@@ -59,13 +59,15 @@ ControllerBinder.prototype.getActions = function () {
     var proto = this.controller.prototype;
     var actions = [];
 
-    for (var name in proto) {
+    Object.keys(proto).forEach(function(name) {
         if (isValidAction(proto, name)) {
             var action = proto[name];
+
             ensureActionMapping(action, name);
+
             actions.push(action);
         }
-    }
+    });
 
     return actions;
 };
