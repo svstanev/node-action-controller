@@ -10,7 +10,7 @@ function initControllers(express, options, controllerFactory) {
         controllerFactory: controllerFactory,
         transformResult: options.transformResult,
         transformError: options.transformError
-    }
+    };
 
     var controllerBinder = function (controller) {
         new ExpressControllerBinder(controller, binderOptions)
@@ -27,10 +27,19 @@ function routerFromController(controller, options) {
 }
 
 function bindController(express, controller, options) {
-    var controllerFactory = utils.isFunction(options) ? options : null;
+    if (utils.isFunction(options)) {
+        options = {
+            factory: options
+        };
+    }
+
+    var controllerFactory = options.controllerFactory || options.factory;
+
     var binderOptions = {
         controllerFactory: controllerFactory,
-    }
+        transformResult: options.transformResult,
+        transformError: options.transformError
+    };
 
     new ExpressControllerBinder(controller, binderOptions)
         .bind(express);
