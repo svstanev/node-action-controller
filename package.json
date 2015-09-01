@@ -25,6 +25,6 @@
     "express": "^4.12.3",
     "lodash": "^3.6.0",
     "rsvp": "^3.0.18",
-    "stringbuilder": "git://github.com/svstanev/stringbuilder.git"
+    "stringbuilder": "0.0.11"
   }
 }
