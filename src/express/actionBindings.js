@@ -139,13 +139,13 @@ ExpressActionBinding.prototype.logError = function (description, err) {
     }
 
     new StringBuilder()
-        .appendLine()
+        .appendLine('')
         .appendLine('{0}:', description)
         .appendLine(
-        '\tAction: {0} {1} - {2}',
-        this.action.route.verb.toUpperCase(),
-        this.getPath(),
-        this.action.route.name)
+            '\tAction: {0} {1} - {2}',
+            this.action.route.verb.toUpperCase(),
+            this.getPath(),
+            this.action.route.name)
         .appendLine('\tController: {0}', this.controller.route.src)
         .appendLine('\tError:')
         .append('\t\t{0}', err.message || err)
