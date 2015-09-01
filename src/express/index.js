@@ -27,6 +27,8 @@ function routerFromController(controller, options) {
 }
 
 function bindController(express, controller, options) {
+    options = options || {};
+
     if (utils.isFunction(options)) {
         options = {
             factory: options

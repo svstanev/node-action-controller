@@ -2,6 +2,8 @@ var utils = require('./utils');
 var actionMappings = require('./actionMappings');
 var debug = require('debug')('mvc:controllerBinder');
 
+module.exports.ControllerBinder = ControllerBinder;
+
 /**
  * @class ControllerBinder
  */
@@ -17,6 +19,35 @@ function ControllerBinder(controller, controllerFactory) {
     this.controller.route = utils.extend({}, controller.route);
     this.controllerFactory = ensureControllerFactory(controller, controllerFactory);
 }
+
+ControllerBinder.prototype.bindActions = function (actionBinder) {
+
+    debug(utils.format('BEGIN: %s (%s)', this.controller.route.path, this.controller.route.src));
+
+    this
+        .getActions()
+        .forEach(actionBinder);
+
+    debug(utils.format('END: %s (%s)', this.controller.route.path, this.controller.route.src));
+};
+
+ControllerBinder.prototype.getActions = function () {
+    var proto = this.controller.prototype;
+    var actions = [];
+
+    getAllPropertyNames(proto).forEach(function(name) {
+        if (isValidAction(proto, name)) {
+            var action = proto[name];
+
+            ensureActionMapping(action, name);
+
+            actions.push(action);
+        }
+    });
+
+    return actions;
+};
+
 
 function defaultControllerFactory(controller) {
     return function (context) {
@@ -44,33 +75,15 @@ function ensureControllerFactory(controller, controllerFactory) {
     return controllerFactory.bind(null, controller);
 }
 
-ControllerBinder.prototype.bindActions = function (actionBinder) {
+function getAllPropertyNames(obj) {
+    var props = [];
 
-    debug(utils.format('BEGIN: %s (%s)', this.controller.route.path, this.controller.route.src));
+    do {
+        props = props.concat(Object.getOwnPropertyNames(obj));
+    } while ((obj = Object.getPrototypeOf(obj)) && obj !== Object.prototype);
 
-    this
-        .getActions()
-        .forEach(actionBinder);
-
-    debug(utils.format('END: %s (%s)', this.controller.route.path, this.controller.route.src));
-};
-
-ControllerBinder.prototype.getActions = function () {
-    var proto = this.controller.prototype;
-    var actions = [];
-
-    Object.keys(proto).forEach(function(name) {
-        if (isValidAction(proto, name)) {
-            var action = proto[name];
-
-            ensureActionMapping(action, name);
-
-            actions.push(action);
-        }
-    });
-
-    return actions;
-};
+    return props;
+}
 
 function ensureActionMapping(action, name) {
     var defaultMapping = actionMappings.getDefaultMapping(name);
@@ -81,20 +94,23 @@ function ensureActionMapping(action, name) {
 
     return action;
 }
-var reservedNonActionMethods = ['dispose'];
+
+var actionNameBlackList = ['constructor'];
 
 function isValidAction(controller, name) {
-    var val = controller[name];
-    if (utils.isFunction(val)) {
-
-        if (val.route) {
-            return !val.route.ignore;
-        }
-
-        return !!actionMappings.getMappings(name);  //return name[0] !== '_' && reservedNonActionMethods.indexOf(name) < 0;
+    if (actionNameBlackList.indexOf(name) !== -1) {
+        return false;
     }
-    return false;
-}
 
-module.exports.ControllerBinder = ControllerBinder;
+    var val = controller[name];
+    if (!utils.isFunction(val)) {
+        return false;
+    }
+
+    if (val.route) {
+        return !val.route.ignore;
+    }
+
+    return !!actionMappings.getMappings(name);  //return name[0] !== '_' && reservedNonActionMethods.indexOf(name) < 0;
+}
 
