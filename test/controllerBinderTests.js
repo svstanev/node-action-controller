@@ -91,16 +91,22 @@ suite('controller binder tests', function () {
             assert(actionNames.indexOf('__notAnAction') < 0);
         });
 
-        test('test', function () {
+        test('order of actions according to the paths', function () {
             var actionProperties = actions.map(function (a) {
                 return [a.route.name, a.route.path];
             });
 
+            console.log(actionProperties.join('\n'));
+
             assert.deepEqual(
                 actionProperties,
                 [
+                    ['newReport', '/projects/:projectId/reports/new'],
+                    ['getReport', '/projects/:projectId/reports/:id'],
+                    ['newProject', '/projects/new'],
+                    ['getProject', '/projects/:id'],
+                    ['get', '/:id'],
                     ['list', ''],
-                    ['get', '/:id']
                 ]);
         });
 

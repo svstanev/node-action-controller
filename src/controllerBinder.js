@@ -1,6 +1,7 @@
 var utils = require('./utils');
 var actionMappings = require('./actionMappings');
 var debug = require('debug')('mvc:controllerBinder');
+var comparer = require('./controllerComparer');
 
 module.exports.ControllerBinder = ControllerBinder;
 
@@ -45,7 +46,7 @@ ControllerBinder.prototype.getActions = function () {
         }
     });
 
-    return actions;
+    return actions.sort(comparer.compareByPathDesc);
 };
 
 
@@ -113,4 +114,3 @@ function isValidAction(controller, name) {
 
     return !!actionMappings.getMappings(name);  //return name[0] !== '_' && reservedNonActionMethods.indexOf(name) < 0;
 }
-

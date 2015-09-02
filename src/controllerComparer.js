@@ -33,10 +33,10 @@ function comparePathParts(t1, t2) {
     }
 
     if (!isParam1 && !isParam2) {
-        return t1.localeCompare(t2);
+        return 0;
     }
 
-    return isParam1 ? 1 : -1;
+    return isParam1 ? -1 : 1;
 }
 
 function isParameter(s) {

@@ -33,4 +33,20 @@ UsersController.prototype.get = function (id) {
     return id;
 };
 
+UsersController.prototype.getProject = Route.httpGet('/projects/:id')(function (id) {
+    return id;
+});
+
+UsersController.prototype.newProject = Route.httpGet('/projects/new')(function (id) {
+    return id;
+});
+
+UsersController.prototype.getReport = Route.httpGet('/projects/:projectId/reports/:id')(function (id) {
+    return id;
+});
+
+UsersController.prototype.newReport = Route.httpGet('/projects/:projectId/reports/new')(function (id) {
+    return id;
+});
+
 module.exports = UsersController;

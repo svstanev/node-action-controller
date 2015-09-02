@@ -28,7 +28,7 @@ suite('controller comparer', function () {
         var c1 = controller('/aaa');
         var c2 = controller('/bbb');
 
-        assert.strictEqual(-1, controllerComparer.compareByPath(c1, c2));
+        assert.strictEqual(0, controllerComparer.compareByPath(c1, c2));
     });
 
     test('different length paths are equal', function () {
@@ -42,7 +42,7 @@ suite('controller comparer', function () {
         var c1 = controller('/aaa/ccc/:id');
         var c2 = controller('/aaa/ccc/xxx');
 
-        assert.strictEqual(1, controllerComparer.compareByPath(c1, c2));
+        assert.strictEqual(-1, controllerComparer.compareByPath(c1, c2));
     });
 
     test('sort array', function () {
