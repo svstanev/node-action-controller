@@ -1,4 +1,4 @@
-var Route = require('../../../index').Route;
+var Route = require('../../../').Route;
 
 function UsersController() {
 }
