@@ -108,7 +108,7 @@ ExpressActionBinding.prototype.translateErrorToResult = function(err) {
     }
 
     return Result.InternalError(err);
-}
+};
 
 ExpressActionBinding.prototype.renderResult = function (result, res, next) {
     if (!result || !result.render) {
