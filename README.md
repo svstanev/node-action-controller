@@ -1,4 +1,4 @@
-# Action controller for Node.js and Express web framework
+# Action controller for Node.js and Express web framework [![Build Status](https://travis-ci.org/svstanev/node-action-controller.svg?branch=master)](https://travis-ci.org/svstanev/node-action-controller)
 
 ## Getting started
 
