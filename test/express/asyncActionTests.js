@@ -3,7 +3,7 @@ var rsvp = require('rsvp');
 var httpMocks = require('node-mocks-http');
 
 var Route = require('../../src/route').Route;
-var expressMvc = require('../../src/express/index');
+var expressMvc = require('../../src/express');
 
 suite('async action tests', function () {
     var next = function () {
