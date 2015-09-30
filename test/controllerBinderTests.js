@@ -2,7 +2,7 @@ var assert = require('chai').assert;
 var rsvp = require('rsvp');
 var httpMocks = require('node-mocks-http');
 
-var ControllerBinder = require('../src/ControllerBinder').ControllerBinder;
+var ControllerBinder = require('../src/controllerBinder').ControllerBinder;
 
 function getActionName(action) {
     return action.route.name;
